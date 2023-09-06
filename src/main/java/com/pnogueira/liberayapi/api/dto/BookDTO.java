@@ -1,5 +1,6 @@
 package com.pnogueira.liberayapi.api.dto;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 
 @Data
@@ -9,7 +10,13 @@ import lombok.*;
 public class BookDTO {
 
     private Long id;
+
+    @NotEmpty
     private String title;
+
+    @NotEmpty
     private String author;
+
+    @NotEmpty
     private String isbn;
 }
