@@ -6,8 +6,10 @@ import com.pnogueira.liberayapi.model.repository.BookRepository;
 import com.pnogueira.liberayapi.service.Bookservice;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
-public class BookServiceImpl extends Bookservice {
+public class BookServiceImpl implements Bookservice {
 
     private BookRepository repository;
 
@@ -19,6 +21,13 @@ public class BookServiceImpl extends Bookservice {
         if (repository.existsByIsbn(book.getIsbn())){
             throw new BusinessException("Isbn ja cadastrada");
         }
+
         return repository.save(book);
     }
+
+    @Override
+    public Optional<BookEntity> getById(Long id) {
+        return Optional.empty();
+    }
+
 }

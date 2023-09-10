@@ -5,13 +5,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-@Service
-@Primary
-public class Bookservice {
+import java.util.Optional;
 
 
-    public BookEntity save(BookEntity any) {
-        return any;
-    }
+public interface Bookservice {
 
+
+    BookEntity save(BookEntity any);
+
+    Optional<BookEntity> getById(Long id);
 }

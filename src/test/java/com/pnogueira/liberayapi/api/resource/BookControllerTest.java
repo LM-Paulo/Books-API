@@ -24,6 +24,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.Optional;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
@@ -111,6 +114,49 @@ public class BookControllerTest {
                 .andExpect(jsonPath("errors[0]").value(mensagemErro));
 
     }
+
+    @Test
+    @DisplayName("Deve obter informacoes de um livro")
+    public void getBookDetailsTest() throws Exception {
+        Long id = 1l;
+
+        BookEntity book = BookEntity.builder()
+                .id(id)
+                .title(createNewBook().getTitle())
+                .author(createNewBook().getAuthor())
+                .isbn(createNewBook().getIsbn()).build();
+
+        BDDMockito.given(service.getById(id)).willReturn(Optional.of(book));
+
+        //execucao
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .get(BOOK_API.concat("/"+ id))
+                .accept(MediaType.APPLICATION_JSON);
+
+        mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").value(id) )
+                .andExpect(jsonPath("title").value(createNewBook().getTitle()) )
+                .andExpect(jsonPath("author").value(createNewBook().getAuthor()) )
+                .andExpect(jsonPath("isbn").value(createNewBook().getIsbn()) );
+    }
+
+    @Test
+    @DisplayName("deve retornar resouce not foud quando o livro procurado não existir")
+    public void bookNotFoudTest() throws Exception {
+
+        BDDMockito.given(service.getById(Mockito.anyLong())).willReturn(Optional.empty());
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .get(BOOK_API.concat("/"+ 1))
+                .accept(MediaType.APPLICATION_JSON);
+
+        mvc.perform(request)
+                .andExpect(status().isNotFound());
+
+
+    }
+
 
     private static BookDTO createNewBook() {
         return BookDTO.builder().author("PAULO").title("As aventuras").isbn("001").build();
