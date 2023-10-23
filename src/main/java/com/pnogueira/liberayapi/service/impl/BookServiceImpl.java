@@ -1,6 +1,5 @@
 package com.pnogueira.liberayapi.service.impl;
 
-import com.pnogueira.liberayapi.api.dto.BookDTO;
 import com.pnogueira.liberayapi.api.exception.BusinessException;
 import com.pnogueira.liberayapi.model.entity.BookEntity;
 import com.pnogueira.liberayapi.model.repository.BookRepository;

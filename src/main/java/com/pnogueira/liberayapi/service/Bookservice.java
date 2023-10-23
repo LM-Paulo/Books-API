@@ -1,13 +1,9 @@
 package com.pnogueira.liberayapi.service;
 
-import com.pnogueira.liberayapi.api.dto.BookDTO;
+
 import com.pnogueira.liberayapi.model.entity.BookEntity;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
 import java.util.Optional;
 
 
