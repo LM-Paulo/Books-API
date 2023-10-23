@@ -18,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -25,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -186,28 +190,31 @@ public class BookControllerTest {
     }
 
     @Test
-    @DisplayName("Deve atualizar um livro")
+    @DisplayName("Deve atualizar um livro.")
     public void updateBookTest() throws Exception {
         Long id = 1l;
-        String json = new ObjectMapper().writeValueAsString(createNewBook());
+        BookDTO dto = createNewBook();
+        String json = new ObjectMapper().writeValueAsString(dto);
 
-        BookEntity updatingBook = BookEntity.builder().id(1l).title("some title").author("some author").isbn("321").build();
-        BDDMockito.given( service.getById(id) ).willReturn( Optional.of(updatingBook) );
-        BookEntity updatedBook = BookEntity.builder().id(id).author("Artur").title("As aventuras").isbn("321").build();
+        BookEntity updatingBook = BookEntity.builder().id(id).title("some title").author("some author").isbn("321").build();
+        BDDMockito.given(service.getById(id)).willReturn(Optional.of(updatingBook));
+
+        BookEntity updatedBook = BookEntity.builder().id(id).author("PAULO").title("As aventuras").isbn("001").build();
         BDDMockito.given(service.update(updatingBook)).willReturn(updatedBook);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .put(BOOK_API.concat("/" + 1))
-                .content(json)
+                .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON);
+                .content(json);
 
-        mvc.perform( request )
-                .andExpect( status().isOk() )
-                .andExpect( jsonPath("id").value(id) )
-                .andExpect( jsonPath("title").value(createNewBook().getTitle()) )
-                .andExpect( jsonPath("author").value(createNewBook().getAuthor()) )
-                .andExpect( jsonPath("isbn").value("321") );
+        mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").isNotEmpty())
+                .andExpect(jsonPath("id").value(id))
+                .andExpect(jsonPath("title").value(dto.getTitle()))
+                .andExpect(jsonPath("author").value(dto.getAuthor()))
+                .andExpect(jsonPath("isbn").value(dto.getIsbn()));
     }
 
 
@@ -235,6 +242,32 @@ public class BookControllerTest {
     }
 
 
+    @Test
+    @DisplayName("Deve filtrar livros.")
+    public void findBooksTest() throws Exception {
+        Long id = 1L;
+
+        BookDTO dto = createNewBook();
+        BookEntity book = BookEntity.builder()
+                .id(id).author(dto.getAuthor()).title(dto.getTitle()).isbn(dto.getIsbn()).build();
+
+        BDDMockito.given(service.find(Mockito.any(BookEntity.class), Mockito.any(Pageable.class)))
+                .willReturn(new PageImpl<BookEntity>(Arrays.asList(book), PageRequest.of(0, 100), 1));
+
+        String queryString = String.format("?title=%s&author=%s&page=0&size=100",
+                book.getTitle(), book.getAuthor());
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .get(BOOK_API.concat(queryString))
+                .accept(MediaType.APPLICATION_JSON);
+
+        mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("content", Matchers.hasSize(1)))
+                .andExpect(jsonPath("totalElements").value(1))
+                .andExpect(jsonPath("pageable.pageSize").value(100))
+                .andExpect(jsonPath("pageable.pageNumber").value(0));
+    }
 
 
     private static BookDTO createNewBook() {
