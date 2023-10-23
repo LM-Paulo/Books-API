@@ -6,6 +6,7 @@ import com.pnogueira.liberayapi.api.exception.BusinessException;
 import com.pnogueira.liberayapi.model.entity.BookEntity;
 import com.pnogueira.liberayapi.service.Bookservice;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/books")
+@Slf4j
 public class BookController {
 
 
@@ -53,6 +55,30 @@ public class BookController {
 
 
 
+    }
+
+
+    @DeleteMapping("{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id){
+        BookEntity book = service.getById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        service.delete(book);
+
+
+    }
+
+    @PutMapping("{id}")
+    public BookDTO update( @PathVariable Long id, @RequestBody @Valid BookDTO dto){
+        log.info(" updating book of id: {} ", id);
+        return service.getById(id).map( book -> {
+
+            book.setAuthor(dto.getAuthor());
+            book.setTitle(dto.getTitle());
+            book = service.update(book);
+            return modelMapper.map(book, BookDTO.class);
+
+        }).orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND) );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
